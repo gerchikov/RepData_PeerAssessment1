@@ -1,21 +1,18 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
 
-```{r load}
+
+```r
 activity <- read.csv(unz("activity.zip", "activity.csv"), na.strings = "NA")
 ```
 
 
 ## What is mean total number of steps taken per day?
 
-```{r daily}
+
+```r
 library(stats)  # for aggregate()
 daily_analysis <- function(activity) {
   daily <- aggregate(activity$steps, by = list(activity$date), FUN = sum)
@@ -29,29 +26,68 @@ daily_analysis <- function(activity) {
 daily_analysis(activity)
 ```
 
+![](PA1_template_files/figure-html/daily-1.png) 
+
+```
+## Daily mean: 10766.19 
+## Daily median: 10765
+```
+
 
 ## What is the average daily activity pattern?
 
-```{r daily pattern}
+
+```r
 intervals <- aggregate(activity$steps, by = list(activity$interval), FUN = mean, na.rm = T)
 colnames(intervals) <- c("interval", "steps")
 
 plot(intervals, type = 'l')
+```
 
+![](PA1_template_files/figure-html/daily pattern-1.png) 
+
+```r
 # which interval has max steps, on average?
 intervals[which.max(intervals$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 
 ## Imputing missing values
 
-```{r impute}
+
+```r
 # how many missing step values? (Note: no missing date or interval values!)
 sum(is.na(activity$steps))
+```
 
+```
+## [1] 2304
+```
+
+```r
 # how are they distributed?
 t <- aggregate(activity$steps, by = list(activity$date), FUN = function(x) {sum(is.na(x))})
 t[t$x > 0,]
+```
+
+```
+##       Group.1   x
+## 1  2012-10-01 288
+## 8  2012-10-08 288
+## 32 2012-11-01 288
+## 35 2012-11-04 288
+## 40 2012-11-09 288
+## 41 2012-11-10 288
+## 45 2012-11-14 288
+## 61 2012-11-30 288
+```
+
+```r
 rm(t)
 
 # it seems that only entire days are missing.
@@ -60,13 +96,24 @@ activity.filled <- activity
 activity.filled$steps[is.na(activity$steps)] <- as.integer(intervals$steps)
 
 daily_analysis(activity.filled)
+```
+
+![](PA1_template_files/figure-html/impute-1.png) 
+
+```
+## Daily mean: 10749.77 
+## Daily median: 10641
+```
+
+```r
 # Note: imputing missing values changes (lowers) the mean and median of daily steps.
 ```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r weekdays}
+
+```r
 activity.filled$day_type <- 
   as.factor(ifelse(weekdays(as.Date(activity.filled$date), T) %in% c("Sat", "Sun"), 
                    "weekend", "weekday"))
@@ -82,3 +129,5 @@ colnames(intervals) <- c("interval", "day_type", "steps")
 library(lattice)
 xyplot(steps ~ interval | day_type, intervals, type = 'l', groups = day_type, layout = c(1, 2))
 ```
+
+![](PA1_template_files/figure-html/weekdays-1.png) 
